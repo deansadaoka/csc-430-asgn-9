@@ -1,0 +1,5 @@
+Nim was created to be a language as fast as C, expressive as Python, and as extensive as Lisp. 
+Nim is statistically typed. 
+Nim supports Object Oriented programming with features like inheritance. 
+Nim allows for generic functions. 
+Nim's garbage collector is automatic, but it can be tuned and even turned off. 
