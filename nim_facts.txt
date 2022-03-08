@@ -1,0 +1,2 @@
+According to StackShare, 5 companies have reported using Nim and 76 developers have reported using it. 
+Compared to Python, where 7966 companies and 150805 developers have reported using it. 
