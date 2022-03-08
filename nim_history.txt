@@ -10,5 +10,5 @@ Nim supports Object Oriented programming with features like inheritance.
 Nim allows for generic functions. 
 Nim's garbage collector is automatic, but it can be tuned and even turned off. 
 
-Nim supports Uniform Function Call Syntax (UFCS) which identifer equality which allows for a lot of flexibility. 
+Nim supports Uniform Function Call Syntax (UFCS) which allows for a lot of flexibility. 
 See examples/hello_world.nim for an example of the many ways to call hello world
