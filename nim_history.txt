@@ -1,0 +1,11 @@
+Language developed and designed by a team lead by Andreas Rumpf. 
+Nim started being created in 2005 and was made public in 2008. 
+Nim was originally named Nimrod. 
+The first Nim compiler was written in Pascal. 
+The Nim compiler is free and open-source. It is currently being developed by Andreas Rumpf and a group of community volunteers. 
+
+Nim was created to be a language as fast as C, expressive as Python, and as extensive as Lisp. 
+Nim is statistically typed. 
+Nim supports Object Oriented programming with features like inheritance. 
+Nim allows for generic functions. 
+Nim's garbage collector is automatic, but it can be tuned and even turned off. 
