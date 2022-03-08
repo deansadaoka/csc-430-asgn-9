@@ -1,0 +1,10 @@
+Nim supports Uniform Function Call Syntax (UFCS) which allows for a lot of flexibility. 
+See examples/hello_world.nim for an example of the many ways to call hello world
+
+Nim supports identifier equality, allowing for more flexibility. 
+For example, the identifiers varA, vara, and var_A are all the same. 
+
+Nim has the feature stropping, which allows for variable names to be keywords. 
+For example, if can be made into a variable name. 
+
+
