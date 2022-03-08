@@ -1,0 +1,2 @@
+curl https://nim-lang.org/choosenim/init.sh -sSf | sh
+https://marketplace.visualstudio.com/items?itemName=kosz78.nim#:~:text=In%20the%20command%20palette%20(%20cmd,Save%20)%20when%20using%20this%20extension.
