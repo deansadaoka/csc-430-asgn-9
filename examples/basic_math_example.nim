@@ -28,3 +28,9 @@ assert clamp(1.4, 0.0 .. 1.0) == 1.0 # Clamp
 assert almostEqual(PI, 3.14159265358979)
 assert euclDiv(-13, -3) == 5  # Euclidean Division
 assert euclMod(-13, 3) == 2   # Euclidean Modulo
+
+var x = 4.0
+var y = 4
+assert x != y
+assert x == float(y)
+echo x
