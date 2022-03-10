@@ -22,8 +22,7 @@ type
             params: seq[string]
             body: ExprC
         of ifC: 
-            cond: bool
-            then, elseArg: ExprC
+            cond, then, elseArg: ExprC
         of stringC: str: string
 
 
@@ -61,6 +60,14 @@ proc append_env(env: seq[tuple[name: string, val: Value]], params: seq[string], 
         return concat(tempBind, append_env(env, params[1 .. (params.len - 1)], fun_args[1 .. (fun_args.len - 1)]))
 
 
+# (define (lookup [for : Symbol] [env : Environment]) : Value
+proc lookup(search: string, env: seq[tuple[name: string, val: Value]]): Value =
+    for b in env:
+        if b[0] == search:
+            return b[1]
+    echo "lookup: TULI5: name not found"
+
+# Define method
 proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value
 
 # primV helper function, finds and evaluates primV operands
@@ -79,7 +86,7 @@ proc primV_interp(operator: string, args: seq[ExprC], env: seq[tuple[name: strin
         else:
             return Value(valType: numV, num: arg_one.num / arg_two.num)
     elif operator == "<=" and arg_one.valType == numV and arg_two.valType == numV:
-        return Value(valType: boolV, boolArg: arg_one.valType <= arg_two.valType)
+        return Value(valType: boolV, boolArg: arg_one.num <= arg_two.num)
     elif operator == "equal" and arg_one.valType == numV and arg_two.valType == numV:
         return Value(valType: boolV, boolArg: arg_one.num == arg_two.num)
     else:
@@ -94,13 +101,15 @@ proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value =
     of stringC: 
         return Value(valType: strV, str: exp.str)
     of idC: 
-        echo "(lookup id env) or lookup(exp.sym, env)"
+        return lookup(exp.sym, env)
     of ifC:
-        case exp.cond
-        of true:
-            return interp(exp.then, env)
-        of false:
-            return interp(exp.elseArg, env)
+        var ifCond = interp(exp.cond, env)
+        case ifCond.valType
+        of boolV:
+            if ifCond.boolArg:
+                return interp(exp.then, env)
+            else:
+                return interp(exp.elseArg, env)
         else:
             echo "if condition not a boolean"
     of appC:
@@ -117,7 +126,7 @@ proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value =
         of primV:
             return primV_interp(tempVal.operator, exp.args, env)
         else:
-                echo "put else shit here"
+            echo "interp: TULI5: not a valid function ~e"
     of lamC:
         return Value(valType: closV, params: exp.params, body: exp.body, env: env)
     return
@@ -125,19 +134,19 @@ proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value =
 
 # Interp Test Cases
 var exp1 = ExprC(exp: stringC, str: "fat")
-var env1 = @[("hello", Value(valType: numV, num: 20)), ("world", Value(valType: numV, num: 10))]
+var env1 = @[("hello", Value(valType: numV, num: 20)),
+             ("world", Value(valType: numV, num: 10)),
+             ("+", Value(valType: primV, operator: "+")),
+             ("<=", Value(valType: primV, operator: "<=")),
+             ("equal", Value(valType: primV, operator: "equal"))]
 var ret1 = interp(exp1, env1)
 assert ret1.str == "fat"
 
-var exp2 = ExprC(exp: ifC, cond: false, then: ExprC(exp: stringC, str: "this is true"), elseArg: ExprC(exp: stringC, str: "this is false"))
-var ret2 = interp(exp2, env1)
-assert ret2.str == "this is false"
-
 var exp3 = ExprC(exp: appC, 
-    fn: ExprC(exp: lamC, params: @["x", "y"], body: ExprC(exp: stringC, str: "three")), 
-    args: @[ExprC(exp: stringC, str: "one"), ExprC(exp: stringC, str: "two")])
+    fn: ExprC(exp: idC, sym: "+"), 
+    args: @[ExprC(exp: numC, num: 1), ExprC(exp: numC, num: 2)])
 var ret3 = interp(exp3, env1)
-doAssert ret3.str == "three"
+assert ret3.num == 3
 
 var exp4 = primV_interp("+", @[ExprC(exp: numC, num: 420), ExprC(exp: numC, num: 69)], env1)
 assert exp4.num == 489
@@ -155,7 +164,12 @@ var exp8 = primV_interp("equal", @[ExprC(exp: numC, num: 420), ExprC(exp: numC, 
 assert exp8.boolArg == false
 
 var exp9 = primV_interp("<=", @[ExprC(exp: numC, num: 420), ExprC(exp: numC, num: 69)], env1)
-assert exp9.boolArg == true
+assert exp9.boolArg == false
+
+var exp10 = ExprC(exp: idC, sym: "hello")
+assert lookup(exp10.sym, env1).num == Value(valType: numV, num: 20).num
+var ret10 = interp(exp10, env1)
+assert ret10.num == 20
 
 
 # ExprC Test Cases
@@ -171,10 +185,14 @@ assert expr3.fn.sym == "-"
 var expr4 = ExprC(exp: lamC, params: @["hello", "world"], body: ExprC(exp: stringC, str: "hey"))
 doAssert expr4.params == @["hello", "world"]
 
-let expr5 = ExprC(exp: ifC, cond: false, then: ExprC(exp: numC, num: 5), elseArg: ExprC(exp: numC, num: 10))
-assert expr5.then.num == 5
-assert expr5.elseArg.num == 10
-assert expr5.cond == false
+let expr5 = ExprC(exp: ifC, 
+    cond: ExprC(exp: appC, 
+                fn: ExprC(exp: idC, sym: "<="),
+                args: @[ExprC(exp: numC, num: 420), ExprC(exp: numC, num: 69)]), 
+    then: ExprC(exp: numC, num: 5), 
+    elseArg: ExprC(exp: numC, num: 10))
+var ret5 = interp(expr5, env1)
+assert ret5.num == 10
         
 # https://docs.w3cub.com/nim/tut2
 
