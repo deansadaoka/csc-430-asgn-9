@@ -65,7 +65,7 @@ proc lookup(search: string, env: seq[tuple[name: string, val: Value]]): Value =
     for b in env:
         if b[0] == search:
             return b[1]
-    echo "lookup: TULI5: name not found"
+    raise newException(OSError, fmt"lookup: TULI5: name not found {search}")
 
 # Define method
 proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value
@@ -82,7 +82,7 @@ proc primV_interp(operator: string, args: seq[ExprC], env: seq[tuple[name: strin
         return Value(valType: numV, num: arg_one.num * arg_two.num)
     elif operator == "/" and arg_one.valType == numV and arg_two.valType == numV:
         if arg_two.num == 0:
-            echo "primV_interp: TULI5: cannot divide by zero"
+            raise newException(OSError, "primV_interp: TULI5: cannot divide by zero")
         else:
             return Value(valType: numV, num: arg_one.num / arg_two.num)
     elif operator == "<=" and arg_one.valType == numV and arg_two.valType == numV:
@@ -90,7 +90,8 @@ proc primV_interp(operator: string, args: seq[ExprC], env: seq[tuple[name: strin
     elif operator == "equal" and arg_one.valType == numV and arg_two.valType == numV:
         return Value(valType: boolV, boolArg: arg_one.num == arg_two.num)
     else:
-        echo "primV_interp: TULI5: incorrect arguments ~e"
+        raise newException(OSError, 
+                        fmt"primV_interp: TULI5: not a valid binary operator format: {operator} {arg_one.valType} {arg_two.valType}")
 
 
 # Interprets the given expression, using the list of funs to resolve applications
@@ -111,7 +112,7 @@ proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value =
             else:
                 return interp(exp.elseArg, env)
         else:
-            echo "if condition not a boolean"
+            raise newException(OSError, fmt"interp: TULI5: if condition not a boolean {ifCond.valType}")
     of appC:
         var tempVal = interp(exp.fn, env)
         case tempVal.valType
@@ -122,11 +123,11 @@ proc interp(exp: ExprC, env: seq[tuple[name: string, val: Value]]) : Value =
             if newArgs.len == tempVal.params.len:
                 return interp(tempVal.body, append_env(tempVal.env, tempVal.params, newArgs))
             else:
-                echo fmt"TULI5: differing param and arg count {tempVal.params.len} {exp.args.len}"
+                raise newException(OSError, fmt"TULI5: differing param and arg count {tempVal.params.len} {exp.args.len}")
         of primV:
             return primV_interp(tempVal.operator, exp.args, env)
         else:
-            echo "interp: TULI5: not a valid function ~e"
+            raise newException(OSError, fmt"interp: TULI5: not a valid function {tempVal.valType}")
     of lamC:
         return Value(valType: closV, params: exp.params, body: exp.body, env: env)
     return
@@ -141,6 +142,11 @@ var env1 = @[("hello", Value(valType: numV, num: 20)),
              ("equal", Value(valType: primV, operator: "equal"))]
 var ret1 = interp(exp1, env1)
 assert ret1.str == "fat"
+
+var exp0 = ExprC(exp: appC, 
+    fn: ExprC(exp: stringC, str: "hello"), 
+    args: @[ExprC(exp: numC, num: 1), ExprC(exp: numC, num: 2)])
+doAssertRaises(OSError): ret1 = interp(exp0, env1)
 
 var exp3 = ExprC(exp: appC, 
     fn: ExprC(exp: idC, sym: "+"), 
@@ -264,3 +270,5 @@ assert ret5.num == 10
 #     [('equal? arg-one arg-two) (primV-equal? arg-one arg-two)]
 #     [(_ _ _) (error 'primV-interp "TULI5: incorrect arguments ~e" op)]))
 
+
+# raise newException(OSError, "the request to the OS failed")
